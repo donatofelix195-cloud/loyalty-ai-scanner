@@ -144,18 +144,23 @@ function finishScanning() {
     const reasonList = reasons[verdict];
     const reason = reasonList[Math.floor(Math.random() * reasonList.length)];
 
-    // Update UI
+    // Update UI (but don't show the screen yet to sync with audio reveal)
     elements.verdictTitle.textContent = verdict.toUpperCase();
     elements.verdictTitle.className = `verdict ${verdict}`;
     elements.reasonText.textContent = reason;
     elements.reasonContainer.className = `reason-box ${verdict}`;
     elements.emoji.textContent = isLoyal ? '😇' : '🤡';
 
-    showScreen('resultScreen');
+    const handleAudioError = (e, sound) => {
+        console.warn("Autoplay blocked. Press or click to hear sound.", e);
+        document.body.addEventListener('click', () => {
+            sound.play();
+            showScreen('resultScreen');
+        }, { once: true });
+    };
 
-    // Play Audio logic
-    const playRandom = (type) => {
-        const list = state.audio[type];
+    const playResult = () => {
+        const list = state.audio[verdict];
 
         // Reset all sounds first
         Object.values(state.audio).flat().forEach(a => {
@@ -163,46 +168,41 @@ function finishScanning() {
             a.currentTime = 0;
         });
 
-        const handleAudioError = (e, sound) => {
-            console.warn("Autoplay blocked. Press or click to hear sound.", e);
-            document.body.addEventListener('click', () => sound.play(), { once: true });
-        };
-
-        if (type === 'fiel') {
-            // Pick random between Let Her Go or Angel Choir
+        if (isLoyal) {
             const sound = list[Math.floor(Math.random() * list.length)];
             console.log(`Playing faithful sound: ${sound.src}`);
+            showScreen('resultScreen');
             sound.play().catch(e => handleAudioError(e, sound));
         } else {
-            // INFIDEL: Higher drama
+            // INFIDEL: Drama sequence
             const wait = list[0]; // no-no-wait-wait
             const classic = list[1]; // infiel classic
             const drama = list[2]; // infiel-drama
 
             const randomType = Math.random();
-            if (randomType > 0.6) {
-                // Combo Wait + Drama
-                console.log("Playing infidelity combo (Wait + Drama)");
-                wait.play().then(() => {
-                    wait.onended = () => drama.play();
-                }).catch(e => handleAudioError(e, wait));
-            } else if (randomType > 0.3) {
-                // Classic Infiel
-                console.log("Playing classic infidelity sound");
-                classic.play().catch(e => handleAudioError(e, classic));
-            } else {
-                // Drama reveal directly
-                console.log("Playing drama infidelity sound");
+            if (randomType > 0.5) {
+                // Impacto inmediato con el drama
+                console.log("Playing immediate infidelity drama");
+                showScreen('resultScreen');
                 drama.play().catch(e => handleAudioError(e, drama));
+            } else {
+                // El combo "No no no wait" antes de mostrar el resultado final
+                console.log("Playing Wait combo before reveal");
+                wait.play().then(() => {
+                    // Esperar un poco para mostrar el resultado justo con el "drama"
+                    setTimeout(() => {
+                        showScreen('resultScreen');
+                        drama.play().catch(err => console.error(err));
+                    }, 1500);
+                }).catch(e => {
+                    showScreen('resultScreen');
+                    classic.play().catch(err => handleAudioError(err, classic));
+                });
             }
         }
     };
 
-    if (isLoyal) {
-        playRandom('fiel');
-    } else {
-        playRandom('infiel');
-    }
+    playResult();
 }
 
 // Event Listeners
