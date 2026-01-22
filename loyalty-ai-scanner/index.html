@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Loyalty AI Scanner | Detector de Fidelidad</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="manifest" href="manifest.json">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <div class="subtitle">Análisis Bio-Métrico Cuántico</div>
+            <h1>Loyalty AI</h1>
+        </header>
+
+        <main class="glass-card">
+            <!-- Screen 1: Start -->
+            <div id="setup-screen" class="fade-in">
+                <div class="scanner-viewport">
+                    <video id="video-preview" autoplay playsinline muted></video>
+                    <div class="scanner-overlay" id="scanner-overlay">
+                        <div class="scan-line"></div>
+                    </div>
+                </div>
+
+                <p style="text-align: center; color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">
+                    Nuestra IA analiza patrones micro-faciales para determinar el índice de lealtad.
+                </p>
+
+                <button class="btn-primary" id="start-scan-btn">
+                    <i data-lucide="scan-eye"></i>
+                    INICIAR ESCANEO
+                </button>
+
+                <input type="file" id="file-upload" accept="image/*" style="display: none;">
+                <button class="btn-primary" id="upload-btn"
+                    style="margin-top: 0.75rem; background: transparent; border: 1px solid var(--border-glass);">
+                    <i data-lucide="upload"></i>
+                    SUBIR FOTO
+                </button>
+            </div>
+
+            <!-- Screen 2: Processing -->
+            <div id="processing-screen" class="result-display fade-in">
+                <div class="scanner-viewport">
+                    <div id="captured-image-placeholder"
+                        style="width: 100%; height: 100%; background: #000; display: flex; align-items: center; justify-content: center;">
+                        <i data-lucide="cpu" class="pulse"
+                            style="width: 48px; height: 48px; color: var(--loyal-primary);"></i>
+                    </div>
+                    <div class="scanner-overlay" style="display: block;">
+                        <div class="scan-line"></div>
+                    </div>
+                </div>
+                <h2 class="pulse" style="margin-bottom: 1rem;">PROCESANDO...</h2>
+                <div id="status-log"
+                    style="font-family: monospace; font-size: 0.8rem; color: var(--loyal-primary); text-align: left; padding: 1rem; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                    > Estableciendo conexión neuronal...<br>
+                    > Mapeando coordenadas faciales...<br>
+                    > Analizando pupilas...
+                </div>
+            </div>
+
+            <!-- Screen 3: Result -->
+            <div id="result-screen" class="result-display fade-in">
+                <div id="result-emoji" style="font-size: 5rem; margin-bottom: 1rem;">😇</div>
+                <h2 id="result-verdict" class="verdict fiel">FIEL</h2>
+
+                <div class="reason-box" id="reason-container">
+                    <div class="reason-title">RAZONES DETECTADAS:</div>
+                    <div class="reason-text" id="result-reason">
+                        Simetría perfecta en la mirada y dilatación pupilar consistente con la honestidad.
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="reset-btn"
+                    style="margin-top: 2rem; background: rgba(255,255,255,0.05);">
+                    <i data-lucide="rotate-ccw"></i>
+                    NUEVO ESCANEO
+                </button>
+            </div>
+        </main>
+
+        <footer
+            style="text-align: center; color: var(--text-secondary); font-size: 0.7rem; margin-top: auto; padding-bottom: 2rem;">
+            Solo para fines de entretenimiento. <br>
+            Desarrollado con IA (y mucho humor).
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,16 @@
+{
+    "name": "Loyalty AI Scanner",
+    "short_name": "LoyaltyAI",
+    "description": "Detector de fidelidad basado en IA (Humor)",
+    "start_url": "./index.html",
+    "display": "standalone",
+    "background_color": "#0a0a0c",
+    "theme_color": "#10b981",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/3665/3665922.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}
