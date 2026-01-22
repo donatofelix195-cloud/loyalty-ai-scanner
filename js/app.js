@@ -6,12 +6,20 @@ const state = {
     audio: {
         fiel: [
             new Audio('assets/let-her-go.mp3'),
-            new Audio('assets/angel-choir.mp3')
+            new Audio('assets/angel-choir.mp3'),
+            new Audio('assets/siuuu.mp3'),
+            new Audio('assets/viva-venezuela.mp3')
         ],
         infiel: [
             new Audio('assets/no-no-wait-wait.mp3'),
             new Audio('assets/infiel.mp3'),
-            new Audio('assets/infiel-drama.mp3')
+            new Audio('assets/infiel-drama.mp3'),
+            new Audio('assets/emotional-damage.mp3'),
+            new Audio('assets/expropiese.mp3'),
+            new Audio('assets/gta-wasted.mp3'),
+            new Audio('assets/maduro-rolo.mp3'),
+            new Audio('assets/mamaguevo.mp3'),
+            new Audio('assets/oh-no-tiktok-v2.mp3')
         ]
     }
 };
@@ -169,35 +177,35 @@ function finishScanning() {
         });
 
         if (isLoyal) {
+            // Pick random between all available faithful sounds
             const sound = list[Math.floor(Math.random() * list.length)];
             console.log(`Playing faithful sound: ${sound.src}`);
             showScreen('resultScreen');
             sound.play().catch(e => handleAudioError(e, sound));
         } else {
-            // INFIDEL: Drama sequence
-            const wait = list[0]; // no-no-wait-wait
-            const classic = list[1]; // infiel classic
-            const drama = list[2]; // infiel-drama
+            // INFIDEL: Higher drama
+            const wait = state.audio.infiel[0]; // no-no-wait-wait
+            const dramaSounds = state.audio.infiel.slice(1);
+            const drama = dramaSounds[Math.floor(Math.random() * dramaSounds.length)];
 
             const randomType = Math.random();
-            if (randomType > 0.5) {
-                // Impacto inmediato con el drama
-                console.log("Playing immediate infidelity drama");
-                showScreen('resultScreen');
-                drama.play().catch(e => handleAudioError(e, drama));
-            } else {
-                // El combo "No no no wait" antes de mostrar el resultado final
-                console.log("Playing Wait combo before reveal");
+            if (randomType > 0.4) {
+                // Combo: Wait + Drama reveal
+                console.log("Playing infidelity combo (Wait + Randomized Drama)");
                 wait.play().then(() => {
-                    // Esperar un poco para mostrar el resultado justo con el "drama"
                     setTimeout(() => {
                         showScreen('resultScreen');
                         drama.play().catch(err => console.error(err));
                     }, 1500);
                 }).catch(e => {
                     showScreen('resultScreen');
-                    classic.play().catch(err => handleAudioError(err, classic));
+                    drama.play().catch(err => handleAudioError(err, drama));
                 });
+            } else {
+                // Direct reveal with a random drama sound
+                console.log("Playing immediate infidelity drama");
+                showScreen('resultScreen');
+                drama.play().catch(e => handleAudioError(e, drama));
             }
         }
     };

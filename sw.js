@@ -6,8 +6,18 @@ const ASSETS = [
     './js/app.js',
     './manifest.json',
     './assets/let-her-go.mp3',
+    './assets/angel-choir.mp3',
+    './assets/siuuu.mp3',
+    './assets/viva-venezuela.mp3',
     './assets/no-no-wait-wait.mp3',
-    './assets/infiel.mp3'
+    './assets/infiel.mp3',
+    './assets/infiel-drama.mp3',
+    './assets/emotional-damage.mp3',
+    './assets/expropiese.mp3',
+    './assets/gta-wasted.mp3',
+    './assets/maduro-rolo.mp3',
+    './assets/mamaguevo.mp3',
+    './assets/oh-no-tiktok-v2.mp3'
 ];
 
 self.addEventListener('install', (event) => {
