@@ -23,7 +23,15 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(ASSETS);
+            // Attempt to cache all assets, but don't fail installation if one fails
+            return Promise.all(
+                ASSETS.map(url => {
+                    return cache.add(url).catch(err => {
+                        console.warn('Failed to cache asset:', url, err);
+                        return null; // Continue even if one fails
+                    });
+                })
+            );
         })
     );
 });
