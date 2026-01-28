@@ -27,8 +27,13 @@
         </header>
 
         <main class="glass-card">
+            <!-- Loading Indicator (hidden when JS starts) -->
+            <div id="loading-overlay" style="text-align: center; padding: 2rem;">
+                <div class="pulse">Iniciando Red Neuronal...</div>
+            </div>
+
             <!-- Screen 1: Start -->
-            <div id="setup-screen" class="fade-in">
+            <div id="setup-screen" class="fade-in" style="display: none;">
                 <div class="scanner-viewport">
                     <video id="video-preview" autoplay playsinline muted></video>
                     <div class="scanner-overlay" id="scanner-overlay">

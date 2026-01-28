@@ -1,4 +1,4 @@
-const CACHE_NAME = 'loyalty-ai-v1';
+const CACHE_NAME = 'loyalty-ai-v2';
 const ASSETS = [
     './',
     './index.html',
@@ -23,23 +23,43 @@ const ASSETS = [
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            // Attempt to cache all assets, but don't fail installation if one fails
             return Promise.all(
                 ASSETS.map(url => {
-                    return cache.add(url).catch(err => {
+                    return fetch(url).then(response => {
+                        if (!response.ok) throw new Error(`Failed to fetch ${url}`);
+                        return cache.put(url, response);
+                    }).catch(err => {
                         console.warn('Failed to cache asset:', url, err);
-                        return null; // Continue even if one fails
                     });
                 })
             );
-        })
+        }).then(() => self.skipWaiting())
+    );
+});
+
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((name) => {
+                    if (name !== CACHE_NAME) {
+                        return caches.delete(name);
+                    }
+                })
+            );
+        }).then(() => self.clients.claim())
     );
 });
 
 self.addEventListener('fetch', (event) => {
     event.respondWith(
         caches.match(event.request).then((response) => {
-            return response || fetch(event.request);
+            return response || fetch(event.request).catch(() => {
+                // If both fail, and it's a page navigation, return index.html
+                if (event.request.mode === 'navigate') {
+                    return caches.match('./index.html');
+                }
+            });
         })
     );
 });

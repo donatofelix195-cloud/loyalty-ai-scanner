@@ -1,5 +1,15 @@
 console.log("Loyalty AI App Initializing...");
 
+// Global Error Handler for Debugging on Mobile
+window.onerror = function (msg, url, lineNo, columnNo, error) {
+    const errorMsg = document.createElement('div');
+    errorMsg.style.cssText = 'position:fixed; bottom:0; left:0; width:100%; background:rgba(255,0,0,0.9); color:white; padding:10px; font-size:10px; z-index:9999; word-break:break-all;';
+    errorMsg.innerHTML = `ERROR: ${msg} <br> at ${url}:${lineNo}`;
+    document.body.appendChild(errorMsg);
+    console.error("Critical Error:", msg, error);
+    return false;
+};
+
 const state = {
     isScanning: false,
     stream: null,
@@ -30,7 +40,6 @@ Object.entries(state.audio).forEach(([type, list]) => {
         audio.addEventListener('error', (e) => {
             console.warn(`Audio ${type}[${i}] failed to load: ${audio.src}`);
         });
-        // Pre-load
         audio.load();
     });
 });
@@ -75,39 +84,48 @@ const reasons = {
     ]
 };
 
-const elements = {
-    video: document.getElementById('video-preview'),
-    startBtn: document.getElementById('start-scan-btn'),
-    uploadBtn: document.getElementById('upload-btn'),
-    fileInput: document.getElementById('file-upload'),
-    setupScreen: document.getElementById('setup-screen'),
-    processingScreen: document.getElementById('processing-screen'),
-    resultScreen: document.getElementById('result-screen'),
-    verdictTitle: document.getElementById('result-verdict'),
-    reasonText: document.getElementById('result-reason'),
-    reasonContainer: document.getElementById('reason-container'),
-    emoji: document.getElementById('result-emoji'),
-    resetBtn: document.getElementById('reset-btn'),
-    statusLog: document.getElementById('status-log')
-};
+// UI Elements with safety check
+const elements = {};
+const elementIds = [
+    'video-preview', 'start-scan-btn', 'upload-btn', 'file-upload',
+    'setup-screen', 'processing-screen', 'result-screen',
+    'result-verdict', 'result-reason', 'reason-container',
+    'result-emoji', 'reset-btn', 'status-log'
+];
+
+elementIds.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) console.warn(`Element not found: ${id}`);
+    elements[id.replace(/-([a-z])/g, (g) => g[1].toUpperCase())] = el;
+});
+
+// Rename some keys for backward compatibility with the rest of the code
+elements.video = elements.videoPreview;
+elements.startBtn = elements.startScanBtn;
+elements.verdictTitle = elements.resultVerdict;
+elements.reasonText = elements.resultReason;
 
 // Initialize Camera
 async function initCamera() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        console.warn("Camera API not supported or not on HTTPS.");
+        return;
+    }
+
     console.log("Attempting to access camera...");
     try {
         state.stream = await navigator.mediaDevices.getUserMedia({
             video: { facingMode: "user" },
             audio: false
         });
-        elements.video.srcObject = state.stream;
+        if (elements.video) elements.video.srcObject = state.stream;
         console.log("Camera access granted.");
     } catch (err) {
         console.error("Error accessing camera:", err);
-        // Fallback or alert
         if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
             alert("La cámara requiere HTTPS para funcionar en la web.");
         } else {
-            alert("No se pudo acceder a la cámara. Prueba subiendo una foto.");
+            console.warn("Camera blocked or unavailable.");
         }
     }
 }
@@ -115,15 +133,17 @@ async function initCamera() {
 // State Management
 function showScreen(screen) {
     console.log("Switching to screen:", screen);
-    [elements.setupScreen, elements.processingScreen, elements.resultScreen].forEach(s => s.style.display = 'none');
-    elements[screen].style.display = 'block';
+    const screens = [elements.setupScreen, elements.processingScreen, elements.resultScreen];
+    screens.forEach(s => { if (s) s.style.display = 'none'; });
+    if (elements[screen]) elements[screen].style.display = 'block';
 }
 
 function updateLog(messages) {
+    if (!elements.statusLog) return;
     elements.statusLog.innerHTML = '';
     messages.forEach((msg, i) => {
         setTimeout(() => {
-            elements.statusLog.innerHTML += `> ${msg}<br>`;
+            if (elements.statusLog) elements.statusLog.innerHTML += `> ${msg}<br>`;
         }, i * 1200);
     });
 }
@@ -152,12 +172,14 @@ function finishScanning() {
     const reasonList = reasons[verdict];
     const reason = reasonList[Math.floor(Math.random() * reasonList.length)];
 
-    // Update UI (but don't show the screen yet to sync with audio reveal)
-    elements.verdictTitle.textContent = verdict.toUpperCase();
-    elements.verdictTitle.className = `verdict ${verdict}`;
-    elements.reasonText.textContent = reason;
-    elements.reasonContainer.className = `reason-box ${verdict}`;
-    elements.emoji.textContent = isLoyal ? '😇' : '🤡';
+    // Update UI
+    if (elements.verdictTitle) {
+        elements.verdictTitle.textContent = verdict.toUpperCase();
+        elements.verdictTitle.className = `verdict ${verdict}`;
+    }
+    if (elements.reasonText) elements.reasonText.textContent = reason;
+    if (elements.reasonContainer) elements.reasonContainer.className = `reason-box ${verdict}`;
+    if (elements.emoji) elements.emoji.textContent = isLoyal ? '😇' : '🤡';
 
     const handleAudioError = (e, sound) => {
         console.warn("Autoplay blocked. Press or click to hear sound.", e);
@@ -177,21 +199,17 @@ function finishScanning() {
         });
 
         if (isLoyal) {
-            // Pick random between all available faithful sounds
             const sound = list[Math.floor(Math.random() * list.length)];
             console.log(`Playing faithful sound: ${sound.src}`);
             showScreen('resultScreen');
             sound.play().catch(e => handleAudioError(e, sound));
         } else {
-            // INFIDEL: Higher drama
             const wait = state.audio.infiel[0]; // no-no-wait-wait
             const dramaSounds = state.audio.infiel.slice(1);
             const drama = dramaSounds[Math.floor(Math.random() * dramaSounds.length)];
 
-            const randomType = Math.random();
-            if (randomType > 0.4) {
-                // Combo: Wait + Drama reveal
-                console.log("Playing infidelity combo (Wait + Randomized Drama)");
+            if (Math.random() > 0.4) {
+                console.log("Playing infidelity combo");
                 wait.play().then(() => {
                     setTimeout(() => {
                         showScreen('resultScreen');
@@ -202,7 +220,6 @@ function finishScanning() {
                     drama.play().catch(err => handleAudioError(err, drama));
                 });
             } else {
-                // Direct reveal with a random drama sound
                 console.log("Playing immediate infidelity drama");
                 showScreen('resultScreen');
                 drama.play().catch(e => handleAudioError(e, drama));
@@ -214,27 +231,22 @@ function finishScanning() {
 }
 
 // Event Listeners
-if (elements.startBtn) {
-    elements.startBtn.addEventListener('click', startScanning);
-}
+if (elements.startBtn) elements.startBtn.addEventListener('click', startScanning);
 
 if (elements.uploadBtn) {
     elements.uploadBtn.addEventListener('click', () => {
-        elements.fileInput.click();
+        if (elements.fileInput) elements.fileInput.click();
     });
 }
 
 if (elements.fileInput) {
     elements.fileInput.addEventListener('change', (e) => {
-        if (e.target.files.length > 0) {
-            startScanning();
-        }
+        if (e.target.files.length > 0) startScanning();
     });
 }
 
 if (elements.resetBtn) {
     elements.resetBtn.addEventListener('click', () => {
-        // Stop all audio
         Object.values(state.audio).flat().forEach(a => {
             a.pause();
             a.currentTime = 0;
@@ -243,5 +255,22 @@ if (elements.resetBtn) {
     });
 }
 
+// Wrap Lucide initialization
+try {
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    } else {
+        console.warn("Lucide not loaded from CDN.");
+    }
+} catch (e) {
+    console.error("Lucide error:", e);
+}
+
 // Auto-start camera
 initCamera();
+
+// Finalize loading
+if (document.getElementById('loading-overlay')) {
+    document.getElementById('loading-overlay').style.display = 'none';
+}
+showScreen('setupScreen');
